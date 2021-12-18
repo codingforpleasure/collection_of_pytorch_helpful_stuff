@@ -1,8 +1,11 @@
+import os
+
 import cv2
 import numpy as np
 import pandas as pd
 import torch
 from PIL import Image, ImageFile
+import albumentations as A
 
 
 class KeypointsDataset:
@@ -14,14 +17,29 @@ class KeypointsDataset:
             classes=None,
             augmentations=None
     ):
-        self.image_paths = image_paths
+        if isinstance(image_paths, list):
+            self.image_paths = image_paths
+        else:
+            raise Exception("image_paths should be of type list")
 
         if csv_file is None and keypoints:
-            self.keypoints = keypoints
+            if keypoints.ndim == 2 and keypoints.shape[1] == 2:  # x,y
+                self.keypoints = keypoints
+            else:
+                raise Exception("keypoints data does not hold 2 columns")
         else:
-            self.keypoints = pd.read_csv(csv_file)
-            
-        self.augmentations = augmentations
+            df = pd.read_csv(csv_file)
+            if df.shape[1] == 2:
+                self.keypoints = keypoints
+            else:
+                raise Exception("CSV file does not hold 2 columns")
+
+        if augmentations is not None:
+            if isinstance(augmentations, A.BaseCompose):
+                self.augmentations = augmentations
+            else:
+                raise Exception("augmentations is not a valid Albumentation transform")
+
         self.classes = classes
 
     def __len__(self):
@@ -29,7 +47,13 @@ class KeypointsDataset:
 
     def __getitem__(self, item):
         # image = Image.open(self.image_paths[item])
-        image = cv2.imread(self.image_paths[item])
+        img_path = self.image_paths[item]
+
+        if not os.path.exists(img_path):
+            raise Exception(img_path, " does not exist.")
+
+        image = cv2.imread(img_path)
+
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         keypoints = self.keypoints[item]
         image = np.array(image)
