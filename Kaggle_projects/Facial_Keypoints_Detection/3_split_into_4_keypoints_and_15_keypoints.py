@@ -29,6 +29,11 @@ if __name__ == '__main__':
     ######### Creating two csv files`train_15_keypoints.csv` and `train_4_keypoints.csv`
 
     df_15_keypoints = df.iloc[consist_15_keypoints[0], :-1]
+    df_15_keypoints['filename'] = consist_15_keypoints[0]
+    df_15_keypoints['filename'] = df_15_keypoints['filename'].apply(lambda x: 'face_' + str(x) + '.jpeg')
     df_15_keypoints.to_csv('train_15_keypoints.csv', index=False)
+
     df_4_keypoints = df.iloc[consist_4_keypoints[0], :-1]
+    df_4_keypoints['filename'] = consist_4_keypoints[0]
+    df_4_keypoints['filename'] = df_4_keypoints['filename'].apply(lambda x: 'face_' + str(x) + '.jpeg')
     df_4_keypoints.to_csv('train_4_keypoints.csv', index=False)
