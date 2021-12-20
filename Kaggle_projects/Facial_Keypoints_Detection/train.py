@@ -18,48 +18,52 @@ from Detecting_Facial_Keypoints.utils import get_rmse
 def train_one_epoch(loader, model, optimizer, loss_fn, scaler, device):
     losses = []
     loop = tqdm(loader)
+    num_examples = 0
 
-    for batch_idx, (data, targets) in enumerate(loop):
-        data = data.to(config.DEVICE)
-        targets = targets.to(targets.DEVICE)
+    for batch_idx, element in enumerate(loop):
+        img = element["image"].to(config.DEVICE)
+        targets = element["labels"].to(config.DEVICE)
 
         # forward
-        preds = model(loader)
+        preds = model(img)
 
         loss = loss_fn(preds, targets)
-        ##???
+        num_examples += torch.numel(preds[targets != -1])  # TODO!!!
         losses.append(loss.item())
 
-        # backwards
+        # backward
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-    print(f" Loss average over epoch: gh")
+    print(f"Loss average over epoch: {(sum(losses) / num_examples) ** 0.5}")
 
 
 if __name__ == '__main__':
-    for csv_file in glob.glob("*_keypoints.csv"):
-        print("csv_file: ", csv_file)
-        train_ds = dataset.FacialKeypointDataset(csv_file=csv_file,
-                                                 train=True,
-                                                 transform=config.train_transforms)
+    print(torch.__version__)
 
-        train_loader = DataLoader(dataset=train_ds,
-                                  shuffle=True,
-                                  num_workers=config.NUM_WORKERS,
-                                  pin_memory=config.PIN_MEMORY,
-                                  batch_size=config.BATCH_SIZE)
+    # for csv_file in glob.glob("*_keypoints.csv"):
+    csv_file = "train_15_keypoints.csv"
+    print("csv_file: ", csv_file)
+    train_ds = dataset.FacialKeypointDataset(csv_file=csv_file,
+                                             train=True,
+                                             transform=config.train_transforms)
 
-        val_ds = dataset.FacialKeypointDataset(csv_file=csv_file,
-                                               train=True,
-                                               transform=config.train_transforms)
+    train_loader = DataLoader(dataset=train_ds,
+                              shuffle=True,
+                              num_workers=0,  # config.NUM_WORKERS
+                              # pin_memory=config.PIN_MEMORY,
+                              batch_size=config.BATCH_SIZE)
 
-        val_loader = DataLoader(dataset=train_ds,
-                                shuffle=False,
-                                num_workers=config.NUM_WORKERS,
-                                pin_memory=config.PIN_MEMORY,
-                                batch_size=config.BATCH_SIZE)
+    val_ds = dataset.FacialKeypointDataset(csv_file=csv_file,
+                                           train=True,
+                                           transform=config.train_transforms)
+
+    val_loader = DataLoader(dataset=train_ds,
+                            shuffle=False,
+                            num_workers=0,  # config.NUM_WORKERS
+                            # pin_memory=config.PIN_MEMORY,
+                            batch_size=config.BATCH_SIZE)
 
     my_loss_fn = nn.MSELoss(reduction='sum')
     model = EfficientNet.from_pretrained("efficientnet-b0")
@@ -80,6 +84,7 @@ if __name__ == '__main__':
     scaler = torch.cuda.amp.GradScaler()
 
     for epoch in range(config.NUM_EPOCHS):
+
         get_rmse(loader=val_loader,
                  model=model,
                  device=config.DEVICE,

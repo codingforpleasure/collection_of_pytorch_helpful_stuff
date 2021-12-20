@@ -29,17 +29,30 @@ class FacialKeypointDataset(Dataset):
         filename = self.data.loc[item, "filename"]
         image = Image.open(f"./training/keypoints_{self.num_keypoints}/{filename}")
         image = np.array(image)
+        # Since the image should be 3 channels when we pass it into the model EfficientNet,
+        # we will repeat the image:
+
+        image = np.repeat(image.reshape(96, 96, 1), repeats=3, axis=2)
 
         keypoints = self.data.loc[item, self.category_names]
-        keypoints_albumentation_format = np.array(keypoints).reshape(-1, 2)
-        keypoints_albumentation_format = list(
-            zip(keypoints_albumentation_format[:, 0], keypoints_albumentation_format[:, 1]))
+        keypoints = np.array(keypoints).reshape(-1, 2)
+        keypoints = list(zip(keypoints[:, 0], keypoints[:, 1]))
+
         if self.transform:
-            augmentations = self.transform(image=image, keypoints=keypoints_albumentation_format)
+            augmentations = self.transform(image=image, keypoints=keypoints)
             image = augmentations["image"]
             keypoints = augmentations["keypoints"]
 
-        return {"image": image, "labels": np.array(keypoints, dtype=np.int8)}
+        # Important: because we will compare those keypoints to the predictions of the model
+        # therefore we now will reshape it to 1 dimensional array:
+
+        # Moreover since the network predicts points of type np.float32 we will
+        # make sure our keypoints are of the same type
+
+        keypoints = np.array(keypoints, dtype=np.float32).reshape(-1)
+
+        return {"image": image,
+                "labels": keypoints}
 
 
 def vis_keypoints(image, keypoints, color=KEYPOINT_COLOR, diameter=1):
@@ -80,9 +93,9 @@ if __name__ == '__main__':
     print("imgs_per_batch.shape: ", imgs_per_batch.shape)
     print("keypoints_per_batch.shape: ", keypoints_per_batch.shape)
 
-    for img, keypoints_per_image in zip(batch['image'], batch['labels']):
-        single_img = np.array(img, dtype=np.int8).squeeze()
-        print("single_img.shape: ", single_img.shape)
-        print("keypoints_per_image.shape: ", keypoints_per_image.shape)
-        coordinnates_keypoints = np.array(batch['labels'])
-        vis_keypoints(single_img, keypoints_per_image)
+    # for img, keypoints_per_image in zip(batch['image'], batch['labels']):
+    #     single_img = np.array(img, dtype=np.int8).squeeze()
+    #     print("single_img.shape: ", single_img.shape)
+    #     print("keypoints_per_image.shape: ", keypoints_per_image.shape)
+    #     coordinnates_keypoints = np.array(batch['labels'])
+    #     vis_keypoints(single_img, keypoints_per_image)

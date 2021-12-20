@@ -20,15 +20,16 @@ def get_rmse(loader, model, loss_fn, device):
     model.eval()
     num_examples = 0
     losses = []
-
-    for batch_idx, (data, targets) in enumerate(loader):
-        data = data.to(config.DEVICE)
-        targets = targets.to(config.DEVICE)
+    for batch_idx, element in enumerate(loader):
+        img = element["image"].to(device)
+        targets = element["labels"].to(device)
 
         # forward
-        scores = model(data)
+        scores = model(img)
         loss = loss_fn(scores, targets)
-        num_examples += scores[]
+        # num_examples += scores[]
+        losses.append(loss.item())
+
 
 
 def save_checkpoint(state, filename="my_checkpoint.pth.tar"):
