@@ -3,8 +3,6 @@
 # IT works well!
 
 import glob
-import random
-
 import cv2
 import os
 import numpy as np
@@ -112,7 +110,7 @@ if __name__ == '__main__':
 
         final_image = overlayPNG(imgBack=img_bg,
                                  imgFront=new_img2,
-                                 pos=[x_offset, y_offset])  # pos=[0, 0])
+                                 pos=[x_offset, y_offset])
 
         for rotated_point in new_keypoints:
             # Convert to homogenous coordinates in np array format first so that
