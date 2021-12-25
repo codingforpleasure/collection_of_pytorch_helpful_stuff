@@ -88,6 +88,7 @@ if __name__ == '__main__':
 
         coordinates_object = dict(original_keypoints_on_objects.loc[filename,])
 
+        # TODO: Make this more generic!!!
         collection_of_original_keypoints = np.array([
             [coordinates_object['keypoint1-x'], coordinates_object['keypoint1-y'], 1],
             [coordinates_object['keypoint2-x'], coordinates_object['keypoint2-y'], 1],
