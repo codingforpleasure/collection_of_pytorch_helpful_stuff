@@ -7,6 +7,14 @@
 # 2. The size of the object should fit at least into the background in both dimensions.
 
 
+# Assumptions the input csv is in the following format:
+
+# filename,keypoint0-x,keypoint0-y,keypoint1-x,keypoint1-y,width,height
+# match1.png,21.0,3.0,11.0,296.0,32,300
+# match4.png,14.0,1.0,12.0,298.0,26,300
+
+# * This format was generated using the script: json_labelme_to_csv.py
+
 import glob
 import random
 import cv2
