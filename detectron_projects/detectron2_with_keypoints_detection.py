@@ -1,7 +1,8 @@
-# https://towardsdatascience.com/object-detection-in-6-steps-using-detectron2-705b92575578
+# Attention For getting a proper csv file as input,
+# first run the script: 'rotate_keypoints_with_opencv_for_generating_synthetic_data.py'
+
 import glob
 import shutil
-
 import numpy as np
 import pandas as pd
 import cv2  # was installed from the whl file
@@ -69,8 +70,8 @@ def get_matches_dicts(img_dir, dict_class_to_number):
             keypoints_with_visibilty = np.insert(actual_keypoints, list(range(2, num_keypoints * 2 + 2, 2)), 2)
             keypoints_with_visibilty = list(keypoints_with_visibilty)
 
-            # bbox-width,bbox-height,bbox-uppercorner-x,bbox-uppercorner-y
-            bbox_w, bbox_h, bbox_x1, bbox_y1 = row_per_object[-4:]
+            # bbox-height,bbox-width,bbox-uppercorner-x,bbox-uppercorner-y
+            bbox_h, bbox_w, bbox_x1, bbox_y1 = row_per_object[-4:]
 
             obj = {"bbox": [bbox_x1, bbox_y1, bbox_x1 + bbox_w, bbox_y1 + bbox_h],
                    "bbox_mode": BoxMode.XYXY_ABS,
@@ -113,19 +114,19 @@ class Trainer(DefaultTrainer):
 
 if __name__ == '__main__':
 
-    df = pd.read_csv(
-        "/home/gil_diy/PycharmProjects/detectron_2022_clean_start/matches/train/keypoints_with_background_img.csv")
-
-    img = cv2.imread("/home/gil_diy/PycharmProjects/detectron_2022_clean_start/matches/train/match3_keypoint_rotated_with_background17.jpeg")
-    cv2.rectangle(img,
-                  pt1=((df["bbox-uppercorner-x"].values)[0], (df["bbox-uppercorner-y"].values)[0]),
-                  pt2=((df["bbox-uppercorner-x"].values)[0] + (df["bbox-width"].values)[0],
-                       (df["bbox-uppercorner-y"].values)[0] + (df["bbox-height"].values)[0]),
-                  color=(255, 0, 0),
-                  thickness=2)
-
-    cv2.imshow("show", img)
-    cv2.waitKey(0)
+    # df = pd.read_csv(
+    #     "/home/gil_diy/PycharmProjects/detectron_2022_clean_start/matches/train/keypoints_with_background_img.csv")
+    #
+    # img = cv2.imread("/home/gil_diy/PycharmProjects/detectron_2022_clean_start/matches/train/match3_keypoint_rotated_with_background17.jpeg")
+    # cv2.rectangle(img,
+    #               pt1=((df["bbox-uppercorner-x"].values)[0], (df["bbox-uppercorner-y"].values)[0]),
+    #               pt2=((df["bbox-uppercorner-x"].values)[0] + (df["bbox-width"].values)[0],
+    #                    (df["bbox-uppercorner-y"].values)[0] + (df["bbox-height"].values)[0]),
+    #               color=(255, 0, 0),
+    #               thickness=2)
+    #
+    # cv2.imshow("show", img)
+    # cv2.waitKey(0)
 
     classes_names = ['junk', 'match']
     num_classes = len(classes_names)
@@ -160,24 +161,23 @@ if __name__ == '__main__':
 
     dataset_dicts = get_matches_dicts("matches/train", dict_class_name_to_index)
 
-    # for d in sample(dataset_dicts, 1):
-    d = dataset_dicts[0]
-    print("The filename is: ", ["file_name"])
-    img = cv2.imread(d["file_name"])
+    for d in sample(dataset_dicts, 3):
+        print("The filename is: ", ["file_name"])
+        img = cv2.imread(d["file_name"])
 
-    visualizer = Visualizer(img[:, :, ::-1],
-                            metadata=shapes_metadata,
-                            scale=1,
-                            instance_mode=ColorMode.SEGMENTATION)
+        visualizer = Visualizer(img[:, :, ::-1],
+                                metadata=shapes_metadata,
+                                scale=1,
+                                instance_mode=ColorMode.SEGMENTATION)
 
-    out = visualizer.draw_dataset_dict(d)
+        out = visualizer.draw_dataset_dict(d)
 
-    # for box in outputs["instances"].pred_boxes.to('cpu'):
-    #     visualizer.draw_box(box)
-    #     visualizer.draw_text(str(box[:2].numpy()), tuple(box[:2].numpy()))
+        # for box in outputs["instances"].pred_boxes.to('cpu'):
+        #     visualizer.draw_box(box)
+        #     visualizer.draw_text(str(box[:2].numpy()), tuple(box[:2].numpy()))
 
-    cv2.imshow(d["file_name"], out.get_image()[:, :, ::-1])
-    cv2.waitKey()
+        cv2.imshow(d["file_name"], out.get_image()[:, :, ::-1])
+        cv2.waitKey()
 
     cv2.destroyAllWindows()
 
